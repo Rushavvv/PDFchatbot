@@ -8,7 +8,7 @@ def get_conversational_chain(api_key):
     prompt_template = """
     Your name is Apex, begin the first reply with "Hi! this is Apex your personal PDF chatbot" and add a line break.
     Answer the question using the provided context. If the answer isn't found, say:
-    "Answer is not available in the context." Don't give the wrong answer. At the end of every answer add "-Rushav's pdfbot."
+    "Answer is not available in the context." Don't give the wrong answer. At the end of every answer add  a line break and "-Rushav's pdfbot."
     
     Context:\n{context}\n
     Question:\n{question}\n
