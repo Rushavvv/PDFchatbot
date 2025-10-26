@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF Chatbot</title>
+</head>
+<body>
+    <h1>Upload PDF</h1>
+    <input type="file" id="pdfFile">
+    <button onclick="uploadPDF()">Upload</button>
+    <p>After upload, note down the Document ID below.</p>
+
+    <h1>Ask Question</h1>
+    <label>Document ID:</label>
+    <input type="text" id="documentId" placeholder="Enter document ID">
+    <br><br>
+    <label>Question:</label>
+    <input type="text" id="question" placeholder="Ask your question">
+    <button onclick="askQuestion()">Ask</button>
+
+    <h2>Answer:</h2>
+    <div id="answer"></div>
+
+    <script>
+        async function uploadPDF() {
+            const fileInput = document.getElementById("pdfFile");
+            if (!fileInput.files.length) {
+                alert("Please select a PDF first!");
+                return;
+            }
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            const response = await fetch("http://127.0.0.1:8000/upload/", {
+                method: "POST",
+                body: formData
+            });
+            const data = await response.json();
+            alert(`Upload successful! Your Document ID is: ${data.document_id}`);
+        }
+
+        async function askQuestion() {
+            const documentId = document.getElementById("documentId").value;
+            const question = document.getElementById("question").value;
+
+            if (!documentId || !question) {
+                alert("Please enter both Document ID and question!");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/chat/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        document_id: documentId,
+                        question: question,
+                        api_key: "AIzaSyAtry9NRsQie0lnsB_PTvD6kAWhzvNJbsc" })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(`Error: ${err.detail || response.status}`);
+                    return;
+                }
+
+                const data = await response.json();
+                document.getElementById("answer").innerText = data.answer;
+            } catch (error) {
+                console.error(error);
+                alert("Failed to get answer!");
+            }
+        }
+    </script>
+</body>
+</html>
