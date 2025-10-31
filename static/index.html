@@ -1,77 +1,340 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>PDF Chatbot</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Chatbot</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0d1b2a;
+      color: #e0e6ed;
+      min-height: 100vh;
+    }
+
+    .menu-button {
+      position: fixed;
+      top: 10px;
+      left: -810px;
+      background: none;
+      color: white;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 30px;
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    .sidebar {
+      position: fixed;
+      left: -300px;
+      top: 0;
+      width: 300px;
+      background: #15293d;
+      border-right: 1px solid #1b4965;
+      padding: 30px;
+      min-height: 100vh;
+      z-index: 999;
+      transition: left 0.3s ease;
+    }
+
+    .sidebar.open {
+      left: 0;
+    }
+
+    .sidebar h2 {
+      color: #1b4965;
+      margin-bottom: 20px;
+      margin-top: 40px;
+      font-size: 1.5em;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #5a7a95;
+      font-weight: 500;
+      font-size: 0.95em;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      background: #0d1b2a;
+      border: 2px solid #1b4965;
+      border-radius: 6px;
+      color: #e0e6ed;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    input[type="file"]:focus {
+      outline: none;
+      border-color: #2d5f7f;
+    }
+
+    button {
+      background: #1b4965;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 6px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .note {
+      color: #5a7a95;
+      font-size: 0.9em;
+      font-style: italic;
+      margin-top: 10px;
+      padding: 10px;
+      background: #0d1b2a;
+      border-left: 3px solid #1b4965;
+      border-radius: 4px;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 998;
+      display: none;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
+    .main-content {
+      padding: 80px 40px 40px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      color: #1b4965;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #5a7a95;
+      font-size: 1.1em;
+    }
+
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .input-section {
+      margin-bottom: 30px;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #5a7a95;
+      font-weight: 500;
+      font-size: 0.95em;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      background: #15293d;
+      border: 2px solid #1b4965;
+      border-radius: 6px;
+      color: #e0e6ed;
+      font-size: 1em;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #2d5f7f;
+    }
+
+    input[type="text"]::placeholder {
+      color: #3a4a5a;
+    }
+
+    .ask-button {
+      width: auto;
+      padding: 12px 40px;
+      margin-top: 10px;
+    }
+
+    .answer-section h2 {
+      color: #1b4965;
+      margin-bottom: 15px;
+      font-size: 1.5em;
+    }
+
+    #answer {
+      background: #15293d;
+      border: 2px solid #1b4965;
+      border-radius: 6px;
+      padding: 20px;
+      min-height: 200px;
+      color: #e0e6ed;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    #answer:empty::before {
+      content: 'Your answer will appear here...';
+      color: #3a4a5a;
+      font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        padding: 80px 20px 20px 20px;
+      }
+      .header h1 {
+        font-size: 2em;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h1>Upload PDF</h1>
-    <input type="file" id="pdfFile">
-    <button onclick="uploadPDF()">Upload</button>
-    <p>After upload, note down the Document ID below.</p>
+  <button class="menu-button" id="menuButton" onclick="toggleMenu()">☰</button>
 
-    <h1>Ask Question</h1>
-    <label>Document ID:</label>
-    <input type="text" id="documentId" placeholder="Enter document ID">
-    <br><br>
-    <label>Question:</label>
-    <input type="text" id="question" placeholder="Ask your question">
-    <button onclick="askQuestion()">Ask</button>
+  <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
-    <h2>Answer:</h2>
-    <div id="answer"></div>
+  <div class="sidebar" id="sidebar">
+    <h2>Upload PDF</h2>
+    <div class="form-group">
+      <input type="file" id="pdfFile" accept=".pdf" />
+    </div>
+    <button onclick="uploadPDF()">Upload Document</button>
+    <p class="note">After upload, note down the Document ID provided.</p>
+  </div>
 
-    <script>
-        async function uploadPDF() {
-            const fileInput = document.getElementById("pdfFile");
-            if (!fileInput.files.length) {
-                alert("Please select a PDF first!");
-                return;
-            }
-            const formData = new FormData();
-            formData.append("file", fileInput.files[0]);
+  <div class="main-content">
+    <div class="header">
+      <h1>PDF Chatbot</h1>
+      <p>Upload your PDF and ask questions</p>
+    </div>
 
-            const response = await fetch("http://127.0.0.1:8000/upload/", {
-                method: "POST",
-                body: formData
-            });
-            const data = await response.json();
-            alert(`Upload successful! Your Document ID is: ${data.document_id}`);
+    <div class="chat-container">
+      <div class="input-section">
+        <!-- <div class="input-group">
+          <label>Document ID:</label>
+          <input type="text" id="documentId" placeholder="Enter document ID" />
+        </div>
+        <div class="input-group"> -->
+        <select class="input-group" id="input-section">
+            
+        </select>
+          <label>Question:</label>
+          <input type="text" id="question" placeholder="Ask your question" />
+        </div>
+        <button class="ask-button" onclick="askQuestion()">Ask Question</button>
+      </div>
+
+      <div class="answer-section" id="answer">
+        <h2>Answer:</h2>
+        <div id="answer"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('overlay');
+      const menuButton = document.getElementById('menuButton');
+
+        const isOpen = sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+
+        menuButton.textContent = isOpen ? "✕" : "☰";
+    }
+
+    async function uploadPDF() {
+      const fileInput = document.getElementById("pdfFile");
+      if (!fileInput.files.length) {
+        alert("Please select a PDF first!");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      const response = await fetch("http://127.0.0.1:8000/upload/", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+      alert(`Upload successful! Your Document ID is: ${data.document_id}`);
+    }
+
+    async function askQuestion() {
+      const documentId = document.getElementById("documentId").value;
+      const question = document.getElementById("question").value;
+
+      if (!documentId || !question) {
+        alert("Please enter both Document ID and question!");
+        return;
+      }
+
+      try {
+        const answer = document.getElementById('answer');
+        answer.textContent = "Loading...";
+        const response = await fetch("http://127.0.0.1:8000/chat/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            document_id: documentId,
+            question: question,
+            api_key: "AIzaSyAtry9NRsQie0lnsB_PTvD6kAWhzvNJbsc"
+          })
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          alert(`Error: ${err.detail || response.status}`);
+          return;
         }
 
-        async function askQuestion() {
-            const documentId = document.getElementById("documentId").value;
-            const question = document.getElementById("question").value;
-
-            if (!documentId || !question) {
-                alert("Please enter both Document ID and question!");
-                return;
-            }
-
-            try {
-                const response = await fetch("http://127.0.0.1:8000/chat/", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        document_id: documentId,
-                        question: question,
-                        api_key: "AIzaSyAtry9NRsQie0lnsB_PTvD6kAWhzvNJbsc" })
-                });
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    alert(`Error: ${err.detail || response.status}`);
-                    return;
-                }
-
-                const data = await response.json();
-                document.getElementById("answer").innerText = data.answer;
-            } catch (error) {
-                console.error(error);
-                alert("Failed to get answer!");
-            }
-        }
-    </script>
+        const data = await response.json();
+        document.getElementById("answer").innerText = data.answer;
+      } catch (error) {
+        console.error(error);
+        alert("Failed to get answer!");
+      }
+    }
+  </script>
 </body>
 </html>
