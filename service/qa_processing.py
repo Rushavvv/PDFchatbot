@@ -3,6 +3,7 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from service.pdf_processing import load_pdf_text
 from langchain.schema import Document
+from langchain.agents import create_tool_calling_agent, AgentExecutor
 
 def get_conversational_chain(api_key):
     prompt_template = """
@@ -17,6 +18,7 @@ def get_conversational_chain(api_key):
     """
     model = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.3, google_api_key=api_key)
     prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
+
     return load_qa_chain(model, chain_type="stuff", prompt=prompt)
 
 def answer_question_gemini(document_id, question, api_key):

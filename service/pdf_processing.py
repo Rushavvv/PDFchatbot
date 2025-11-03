@@ -19,7 +19,7 @@ async def save_pdf_text(file, document_id):
     return text
 
 def load_pdf_text(document_id):
-    path = PDF_STORAGE / f"{document_id}.txt"
+    path = PDF_STORAGE / f"{document_id}"
     print(f"DEBUG gareko path: {path}, exists: {path.exists()}")
     if not path.exists():
         return None

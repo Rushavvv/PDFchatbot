@@ -249,11 +249,14 @@
         <!-- <div class="input-group">
           <label>Document ID:</label>
           <input type="text" id="documentId" placeholder="Enter document ID" />
+        </div> -->
+        <div class="input-group">
+            <label>Select Document:</label>
+            <select id="documentDropdown">
+              <option value="">-- Select a document --</option>
+            </select>
         </div>
-        <div class="input-group"> -->
-        <select class="input-group" id="input-section">
-            
-        </select>
+        <div class="input-group">
           <label>Question:</label>
           <input type="text" id="question" placeholder="Ask your question" />
         </div>
@@ -298,8 +301,32 @@
       alert(`Upload successful! Your Document ID is: ${data.document_id}`);
     }
 
+    async function loadDocuments() {
+        try {
+            const response = await fetch("http://127.0.0.1:8000/documents/");
+            if (!response.ok) {
+            throw new Error("Failed to fetch documents");
+            }
+            const data = await response.json();
+            const dropdown = document.getElementById("documentDropdown");
+
+            dropdown.innerHTML = '<option value="">-- Select a document --</option>'; 
+            data.documents.forEach(doc => {
+            const option = document.createElement("option");
+            option.value = doc;
+            option.textContent = doc;
+            dropdown.appendChild(option);
+            });
+        } catch (error) {
+            console.error(error);
+            alert("Error loading documents!");
+        }
+    }
+
+    window.onload = loadDocuments;
+
     async function askQuestion() {
-      const documentId = document.getElementById("documentId").value;
+      const documentId = document.getElementById("documentDropdown").value;
       const question = document.getElementById("question").value;
 
       if (!documentId || !question) {
