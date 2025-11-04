@@ -13,7 +13,9 @@
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #0d1b2a;
+      background-image: url('static/image/bg.jpeg');
+      background-position: center;
+      background-repeat: no-repeat;
       color: #e0e6ed;
       min-height: 100vh;
     }
@@ -193,13 +195,13 @@
 
     .answer-section h2 {
       color: #1b4965;
-      margin-bottom: 15px;
+      margin-top: -20px;
+      margin: 10px;
       font-size: 1.5em;
     }
 
     #answer {
-      background: #15293d;
-      border: 2px solid #1b4965;
+      background: transparent;
       border-radius: 6px;
       padding: 20px;
       min-height: 200px;
@@ -213,6 +215,40 @@
       color: #3a4a5a;
       font-style: italic;
     }
+
+    #answer.filled{
+        background-color: #15293d;
+    }
+
+    .chat-bubble {
+      display: inline-block;
+      background-color: #1b4965;
+      color: #e0e6ed;
+      padding: 12px 18px;
+      margin: 10px 0;
+      border-radius: 20px;
+      max-width: 70%;
+      word-wrap: break-word;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .chat-bubble.user {
+      background-color: #0d1b2a;
+      align-self: flex-end;
+    }
+
+    .chat-bubble.bot {
+      background-color: #1b4965;
+      align-self: flex-start;
+    }
+
+    #chatMessages {
+      display: flex;
+      flex-direction: column;
+    }
+
+    
 
     @media (max-width: 768px) {
       .main-content {
@@ -263,9 +299,9 @@
         <button class="ask-button" onclick="askQuestion()">Ask Question</button>
       </div>
 
-      <div class="answer-section" id="answer">
+      <div class="answer-section">
         <h2>Answer:</h2>
-        <div id="answer"></div>
+        <div id="chatMessages"></div>
       </div>
     </div>
   </div>
@@ -325,43 +361,58 @@
 
     window.onload = loadDocuments;
 
-    async function askQuestion() {
-      const documentId = document.getElementById("documentDropdown").value;
-      const question = document.getElementById("question").value;
+  async function askQuestion() {
+    const documentId = document.getElementById("documentDropdown").value;
+    const question = document.getElementById("question").value;
 
-      if (!documentId || !question) {
-        alert("Please enter both Document ID and question!");
+    if (!documentId || !question) {
+      alert("Please enter both Document ID and question!");
+      return;
+    }
+
+    try {
+      const chatContainer = document.getElementById('chatMessages');
+
+      const loadingBubble = document.createElement('div');
+      loadingBubble.className = 'chat-bubble bot';
+      loadingBubble.textContent = 'Loading...';
+      chatContainer.prepend(loadingBubble);
+
+      const userBubble = document.createElement('div');
+      userBubble.className = 'chat-bubble user';
+      userBubble.textContent = question;
+      chatContainer.prepend(userBubble);
+
+      const response = await fetch("http://127.0.0.1:8000/chat/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          document_id: documentId,
+          question: question,
+          api_key: "AIzaSyAtry9NRsQie0lnsB_PTvD6kAWhzvNJbsc"
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        alert(`Error: ${err.detail || response.status}`);
+        loadingBubble.remove();
         return;
       }
 
-      try {
-        const answer = document.getElementById('answer');
-        answer.textContent = "Loading...";
-        const response = await fetch("http://127.0.0.1:8000/chat/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            document_id: documentId,
-            question: question,
-            api_key: "AIzaSyAtry9NRsQie0lnsB_PTvD6kAWhzvNJbsc"
-          })
-        });
+      const data = await response.json();
+      loadingBubble.textContent = data.answer;
 
-        if (!response.ok) {
-          const err = await response.json();
-          alert(`Error: ${err.detail || response.status}`);
-          return;
-        }
+      // Scroll to bottom
+      chatContainer.scrollTop = chatContainer.scrollHeight;
 
-        const data = await response.json();
-        document.getElementById("answer").innerText = data.answer;
-      } catch (error) {
-        console.error(error);
-        alert("Failed to get answer!");
-      }
+    } catch (error) {
+      console.error(error);
+      alert("Failed to get answer!");
     }
+}
+
+
   </script>
 </body>
 </html>
