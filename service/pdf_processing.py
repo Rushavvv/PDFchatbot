@@ -11,7 +11,7 @@ async def save_pdf_text(file, document_id):
     for page in pdf_reader.pages:
         text += page.extract_text() or ""
     
-    # Save text to file for later use
+    # Save text to file
     path = os.path.join(PDF_STORAGE, f"{document_id}.txt")
     with open(path, "w", encoding="utf-8") as f:
         f.write(text)
