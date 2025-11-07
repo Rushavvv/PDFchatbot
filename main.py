@@ -8,6 +8,9 @@ import os
 from pathlib import Path
 from PyPDF2 import PdfReader
 from service.qa_processing import answer_question_gemini
+from service.qa_processing import summarize_pdf
+from models.summary import SummaryRequest
+
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static", html = True), name="static")
@@ -40,6 +43,7 @@ async def upload_pdf(file: UploadFile):
 
     return {"document_id": document_id, "message": f"PDF processed, {len(text)} characters extracted"}
 
+
 PDF_TEXT_DIR = Path("pdf_texts")
 PDF_TEXT_DIR.mkdir(exist_ok=True)
 
@@ -48,6 +52,8 @@ pdf_text_store = {}
 @app.get("/documents/")
 def list_documents():
     files = [f for f in os.listdir(PDF_TEXT_DIR) if f.endswith(".txt")]
+    print("I have reached here")
+    print(files)
     return {"documents": files}
 
 
@@ -66,3 +72,10 @@ async def save_pdf_text(file: UploadFile, document_id: str):
         f.write(text)
 
     return text
+
+
+@app.post("/summarize/")
+async def summarize(request: SummaryRequest):
+    summary = summarize_pdf(request.document_id, request.api_key)
+    print("The summary is:", summary)
+    return {"summary": summary}
