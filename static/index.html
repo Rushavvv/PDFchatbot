@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Chatbot</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-image: url('static/image/bg.jpeg');
+      background-position: center;
+      background-repeat: no-repeat;
+      color: #e0e6ed;
+      min-height: 100vh;
+    }
+
+    .menu-button {
+      position: fixed;
+      top: 10px;
+      left: -810px;
+      background: none;
+      color: black;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 30px;
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    .sidebar {
+      position: fixed;
+      left: -300px;
+      top: 0;
+      width: 300px;
+      background: #15293d;
+      border-right: 1px solid #1b4965;
+      padding: 30px;
+      min-height: 100vh;
+      z-index: 999;
+      transition: left 0.3s ease;
+    }
+
+    .sidebar.open {
+      left: 0;
+    }
+
+    .sidebar h2 {
+      color: #1b4965;
+      margin-bottom: 20px;
+      margin-top: 40px;
+      font-size: 1.5em;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #5a7a95;
+      font-weight: 500;
+      font-size: 0.95em;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      background: #0d1b2a;
+      border: 2px solid #1b4965;
+      border-radius: 6px;
+      color: #e0e6ed;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    input[type="file"]:focus {
+      outline: none;
+      border-color: #2d5f7f;
+    }
+
+    button {
+      background: #1b4965;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 6px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .note {
+      color: #5a7a95;
+      font-size: 0.9em;
+      font-style: italic;
+      margin-top: 10px;
+      padding: 10px;
+      background: #0d1b2a;
+      border-left: 3px solid #1b4965;
+      border-radius: 4px;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 998;
+      display: none;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
+    .main-content {
+      padding: 80px 40px 40px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      color: #1b4965;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #5a7a95;
+      font-size: 1.1em;
+    }
+
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .input-section {
+      margin-bottom: 30px;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #5a7a95;
+      font-weight: 500;
+      font-size: 0.95em;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      background: #15293d;
+      border: 2px solid #1b4965;
+      border-radius: 6px;
+      color: #e0e6ed;
+      font-size: 1em;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #2d5f7f;
+    }
+
+    input[type="text"]::placeholder {
+      color: #3a4a5a;
+    }
+
+    .ask-button {
+      width: auto;
+      padding: 12px 40px;
+      margin-top: 10px;
+    }
+
+    .answer-section h2 {
+      color: #1b4965;
+      margin-top: -20px;
+      margin: 10px;
+      font-size: 1.5em;
+    }
+
+    #answer {
+      background: transparent;
+      border-radius: 6px;
+      padding: 20px;
+      min-height: 200px;
+      color: #e0e6ed;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    #answer:empty::before {
+      content: 'Your answer will appear here...';
+      color: #3a4a5a;
+      font-style: italic;
+    }
+
+    #answer.filled{
+        background-color: #15293d;
+    }
+
+    .chat-bubble {
+      display: inline-block;
+      background-color: #1b4965;
+      color: #e0e6ed;
+      padding: 12px 18px;
+      margin: 10px 0;
+      border-radius: 20px;
+      max-width: 70%;
+      word-wrap: break-word;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .chat-bubble.user {
+      background-color: #0d1b2a;
+      align-self: flex-end;
+    }
+
+    .chat-bubble.bot {
+      background-color: #1b4965;
+      align-self: flex-start;
+    }
+
+    #chatMessages {
+      display: flex;
+      flex-direction: column;
+    }
+
+    
+
+    @media (max-width: 768px) {
+      .main-content {
+        padding: 80px 20px 20px 20px;
+      }
+      .header h1 {
+        font-size: 2em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="menu-button" id="menuButton" onclick="toggleMenu()">☰</button>
+
+  <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+  <div class="sidebar" id="sidebar">
+    <h2>Upload PDF</h2>
+    <div class="form-group">
+      <input type="file" id="pdfFile" accept=".pdf" />
+    </div>
+    <button onclick="uploadPDF()">Upload Document</button>
+    <p class="note">After upload, note down the Document ID provided.</p>
+  </div>
+
+  <div class="main-content">
+    <div class="header">
+      <h1>PDF Chatbot</h1>
+      <p>Upload your PDF and ask questions</p>
+    </div>
+
+    <div class="summary-section">
+      <h2>Summary:</h2>
+      <div id="summaryBox" style="background-color:#15293d; padding:15px; border-radius:6px; min-height:100px; margin-bottom:20px; color:#e0e6ed; white-space:pre-wrap;">
+        Select a document to view its summary...
+      </div>
+    </div>
+
+    
+    <div class="chat-container">
+      <div class="input-section">
+        <!-- <div class="input-group">
+          <label>Document ID:</label>
+          <input type="text" id="documentId" placeholder="Enter document ID" />
+        </div> -->
+        <div class="input-group">
+            <label>Select Document:</label>
+            <select id="documentDropdown">
+              <option value="">-- Select a document --</option>
+            </select>
+        </div>
+        <div class="input-group">
+          <label>Question:</label>
+          <input type="text" id="question" placeholder="Ask your question" />
+        </div>
+        <button class="ask-button" onclick="askQuestion()">Ask Question</button>
+      </div>
+
+      <div class="answer-section">
+        <h2>Answer:</h2>
+        <div id="chatMessages"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('overlay');
+      const menuButton = document.getElementById('menuButton');
+
+        const isOpen = sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+
+        menuButton.textContent = isOpen ? "✕" : "☰";
+    }
+
+    async function uploadPDF() {
+      const fileInput = document.getElementById("pdfFile");
+      if (!fileInput.files.length) {
+        alert("Please select a PDF first!");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      const response = await fetch("http://127.0.0.1:8000/upload/", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+      alert(`Upload successful! Your Document ID is: ${data.document_id}`);
+    }
+
+    async function loadDocuments() {
+    console.log("Loading documents...");
+    try {
+      const response = await fetch("http://127.0.0.1:8000/documents/");
+      console.log("Response status:", response.status);
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("Error response body:", errText);
+        throw new Error("Failed to fetch documents");
+      }
+
+      const data = await response.json();
+      console.log("Documents fetched:", data);
+
+      const dropdown = document.getElementById("documentDropdown");
+      dropdown.innerHTML = '<option value="">-- Select a document --</option>';
+      data.documents.forEach(doc => {
+        const option = document.createElement("option");
+        option.value = doc;
+        option.textContent = doc;
+        dropdown.appendChild(option);
+      });
+
+      const value = document.getElementById("documentDropdown");
+        value.addEventListener("change", function() {
+          const selectedDoc = this.value;
+          fetchSummary(selectedDoc);
+        });
+
+    } catch (error) {
+      console.error("Fetch error:", error);
+      alert("Error loading documents!");
+    }
+  }
+
+
+  window.onload = loadDocuments;
+
+  async function askQuestion() {
+    const documentId = document.getElementById("documentDropdown").value;
+    const question = document.getElementById("question").value;
+
+    if (!documentId || !question) {
+      alert("Please enter both Document ID and question!");
+      return;
+    }
+
+    try {
+      const chatContainer = document.getElementById('chatMessages');
+
+      const loadingBubble = document.createElement('div');
+      loadingBubble.className = 'chat-bubble bot';
+      loadingBubble.textContent = 'Loading...';
+      chatContainer.prepend(loadingBubble);
+
+      const userBubble = document.createElement('div');
+      userBubble.className = 'chat-bubble user';
+      userBubble.textContent = question;
+      chatContainer.prepend(userBubble);
+
+      const response = await fetch("http://127.0.0.1:8000/chat/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          document_id: documentId,
+          question: question,
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        alert(`Error: ${err.detail || response.status}`);
+        loadingBubble.remove();
+        return;
+      }
+
+      const data = await response.json();
+      loadingBubble.textContent = data.answer;
+
+      // Scroll to bottom
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    } catch (error) {
+      console.error(error);
+      alert("Failed to get answer!");
+    }
+}
+async function fetchSummary(documentId) {
+  console.log("I am in")
+    if (!documentId) {
+      document.getElementById("summaryBox").textContent = "Select a document to view its summary...";
+      return;
+    }
+
+    console.log("Second In")
+    const summaryBox = document.getElementById("summaryBox");
+    summaryBox.textContent = "Generating summary...";
+
+    try {
+      console.log('One');
+      const response = await fetch("http://127.0.0.1:8000/summarize/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          document_id: documentId
+        })
+      });
+
+      console.log('Two');
+
+      const data = await response.json();
+      console.log('Three' , data);
+      summaryBox.textContent = data.summary || "No summary available.";
+    } catch (error) {
+      console.error(error);
+      summaryBox.textContent = "Error generating summary.";
+    }
+  }
+
+  </script>
+</body>
+</html>

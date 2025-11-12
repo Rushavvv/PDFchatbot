@@ -1,0 +1,26 @@
+# --- Core Framework ---
+python-dotenv
+
+# --- PDF Processing ---
+PyPDF2
+
+# --- Data Handling ---
+pandas
+beautifulsoup4
+
+# --- LangChain Ecosystem ---
+langchain
+langchain-community
+langchain-huggingface
+langchain-google-genai
+
+# --- Vector Stores & Embeddings ---
+faiss-cpu
+sentence-transformers
+
+# --- Google Gemini ---
+google-generativeai
+
+# --- Miscellaneous ---
+tqdm
+requests
